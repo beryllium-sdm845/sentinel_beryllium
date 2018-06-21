@@ -197,6 +197,11 @@ static void prf_serialize_values(void **buffer)
 		prf_serialize_value(p, buffer);
 }
 
+static inline unsigned long prf_get_padding(unsigned long size)
+{
+	return 8 - (size % 8);
+}
+
 static unsigned long prf_buffer_size(void)
 {
 	return sizeof(struct llvm_prf_header) +
@@ -210,10 +215,7 @@ static unsigned long prf_buffer_size(void)
 static int prf_serialize(struct prf_private_data *p)
 {
 	int err = 0;
-	unsigned long flags;
 	void *buffer;
-
-	flags = prf_serialize_lock();
 
 	p->size = prf_buffer_size();
 	p->buffer = vzalloc(p->size);
@@ -234,29 +236,37 @@ static int prf_serialize(struct prf_private_data *p)
 	prf_serialize_values(&buffer);
 
 out:
-	prf_serialize_unlock(flags);
 	return err;
 }
 
 static int prf_open(struct inode *inode, struct file *file)
 {
 	struct prf_private_data *data;
+	unsigned long flags;
 	int err;
 
-	WARN_ON(file->private_data);
+	flags = prf_lock();
 
 	data = kzalloc(sizeof(*data), GFP_KERNEL);
-	if (!data)
-		return -ENOMEM;
+	if (!data) {
+		err = -ENOMEM;
+		goto out;
+	}
 
 	err = prf_serialize(data);
 	if (err) {
 		kfree(data);
-		return err;
+		goto out;
 	}
 
+	if (file->private_data)
+		kfree(file->private_data);
+
 	file->private_data = data;
-	return 0;
+
+out:
+	prf_unlock(flags);
+	return err;
 }
 
 static ssize_t prf_read(struct file *file, char __user *buf, size_t count,
@@ -265,6 +275,7 @@ static ssize_t prf_read(struct file *file, char __user *buf, size_t count,
 	struct prf_private_data *data = file->private_data;
 
 	WARN_ON(!data);
+
 	return simple_read_from_buffer(buf, count, ppos, data->buffer,
 				       data->size);
 }
@@ -289,43 +300,38 @@ static const struct file_operations prf_fops = {
 	.release	= prf_release
 };
 
-static ssize_t prf_reset_write(struct file *file, const char __user *addr,
+static ssize_t reset_write(struct file *file, const char __user *addr,
 			       size_t len, loff_t *pos)
 {
 	memset(__llvm_prf_cnts_start, 0, prf_cnts_size());
 	return len;
 }
 
-static ssize_t prf_reset_read(struct file *file, char __user *addr, size_t len,
+static ssize_t reset_read(struct file *file, char __user *addr, size_t len,
 			      loff_t *pos)
 {
-	/* Allow read operation so that a recursive copy won't fail. */
 	return 0;
 }
 
 static const struct file_operations prf_reset_fops = {
 	.owner		= THIS_MODULE,
-	.write		= prf_reset_write,
-	.read		= prf_reset_read,
+	.write		= reset_write,
+	.read		= reset_read,
 	.llseek		= noop_llseek,
 };
 
 static int __init pgo_init(void)
 {
-	struct dentry *entry;
-
 	directory = debugfs_create_dir("pgo", NULL);
 	if (!directory)
 		goto err_remove;
 
-	entry = debugfs_create_file("profraw", 0644, directory, NULL,
-				    &prf_fops);
-	if (!entry)
+	if (!debugfs_create_file("profraw", 0600, directory, NULL,
+				 &prf_fops))
 		goto err_remove;
 
-	entry = debugfs_create_file("reset", 0666, directory, NULL,
-				    &prf_reset_fops);
-	if (!entry)
+	if (!debugfs_create_file("reset", 0600, directory, NULL,
+				 &prf_reset_fops))
 		goto err_remove;
 
 	return 0;

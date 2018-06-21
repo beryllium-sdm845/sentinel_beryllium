@@ -118,8 +118,8 @@ extern struct llvm_prf_value_node __llvm_prf_vnds_start[];
 extern struct llvm_prf_value_node __llvm_prf_vnds_end[];
 
 /* Locking for vnodes */
-extern unsigned long prf_serialize_lock(void);
-extern void prf_serialize_unlock(unsigned long flags);
+extern unsigned long prf_lock(void);
+extern void prf_unlock(unsigned long flags);
 
 #define __DEFINE_PRF_SIZE(s) \
 	static inline unsigned long prf_ ## s ## _size(void)		\
@@ -141,10 +141,5 @@ __DEFINE_PRF_SIZE(data);
 __DEFINE_PRF_SIZE(cnts);
 __DEFINE_PRF_SIZE(names);
 __DEFINE_PRF_SIZE(vnds);
-
-static inline unsigned long prf_get_padding(unsigned long size)
-{
-	return 7 & (8 - size % 8);
-}
 
 #endif /* _PGO_H */

@@ -20,33 +20,29 @@
 #include <linux/export.h>
 #include <linux/spinlock.h>
 #include <linux/types.h>
-#include <asm/cmpxchg.h>
 #include "pgo.h"
 
 static int current_node;
-static atomic_t serializing = ATOMIC_INIT(0);
-static DEFINE_SPINLOCK(node_lock);
+static DEFINE_SPINLOCK(pgo_lock);
 
-unsigned long prf_serialize_lock(void)
+unsigned long prf_lock(void)
 {
 	unsigned long flags;
 
-	atomic_inc(&serializing);
-	spin_lock_irqsave(&node_lock, flags);
+	spin_lock_irqsave(&pgo_lock, flags);
 
 	return flags;
 }
 
-void prf_serialize_unlock(unsigned long flags)
+void prf_unlock(unsigned long flags)
 {
-	spin_unlock_irqrestore(&node_lock, flags);
-	atomic_dec(&serializing);
+	spin_unlock_irqrestore(&pgo_lock, flags);
 }
 
 static struct llvm_prf_value_node *allocate_node(struct llvm_prf_data *p,
 						 u32 index, u64 value)
 {
-	/* Note: caller must hold node_lock */
+	/* Note: caller must hold pgo_lock */
 	if (&__llvm_prf_vnds_start[current_node + 1] >= __llvm_prf_vnds_end)
 		return NULL; /* Out of nodes */
 
@@ -65,16 +61,13 @@ void __llvm_profile_instrument_target(u64 target_value, void *data, u32 index)
 	struct llvm_prf_data *p = (struct llvm_prf_data *)data;
 	struct llvm_prf_value_node **counters;
 	struct llvm_prf_value_node *curr;
-	struct llvm_prf_value_node *minn = NULL;
+	struct llvm_prf_value_node *min = NULL;
 	struct llvm_prf_value_node *prev = NULL;
 	u64 min_count = U64_MAX;
 	u8 values = 0;
 	unsigned long flags;
 
 	if (!p || !p->values)
-		return;
-
-	if (atomic_read(&serializing))
 		return;
 
 	counters = (struct llvm_prf_value_node **)p->values;
@@ -88,7 +81,7 @@ void __llvm_profile_instrument_target(u64 target_value, void *data, u32 index)
 
 		if (curr->count < min_count) {
 			min_count = curr->count;
-			minn = curr;
+			min = curr;
 		}
 
 		prev = curr;
@@ -97,29 +90,31 @@ void __llvm_profile_instrument_target(u64 target_value, void *data, u32 index)
 	}
 
 	if (values >= LLVM_PRF_MAX_NUM_VALS_PER_SITE) {
-		if (!minn->count || !(--minn->count)) {
-			curr = minn;
+		if (!min->count || !(--min->count)) {
+			curr = min;
 			curr->value = target_value;
 			curr->count++;
 		}
 		return;
 	}
 
-	/* Lock when updating the value node structure */
-	spin_lock_irqsave(&node_lock, flags);
+	/* Lock when updating the value node structure. */
+	flags = prf_lock();
 
 	curr = allocate_node(p, index, target_value);
-	if (curr) {
-		curr->value = target_value;
-		curr->count++;
+	if (!curr)
+		goto out;
 
-		if (!counters[index])
-			cmpxchg(&counters[index], NULL, curr);
-		else if (prev && !prev->next)
-			cmpxchg(&prev->next, NULL, curr);
-	}
+	curr->value = target_value;
+	curr->count++;
 
-	spin_unlock_irqrestore(&node_lock, flags);
+	if (!counters[index])
+		counters[index] = curr;
+	else if (prev && !prev->next)
+		prev->next = curr;
+
+out:
+	prf_unlock(flags);
 }
 EXPORT_SYMBOL(__llvm_profile_instrument_target);
 
