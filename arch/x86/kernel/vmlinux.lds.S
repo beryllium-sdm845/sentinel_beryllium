@@ -153,6 +153,7 @@ SECTIONS
 		_edata = .;
 	} :data
 
+	PGO_CLANG_DATA
 
 	. = ALIGN(PAGE_SIZE);
 	__vvar_page = .;

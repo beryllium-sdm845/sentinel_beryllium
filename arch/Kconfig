@@ -856,3 +856,4 @@ config VMAP_STACK
 	  that is incorrect if the stack is in vmalloc space.
 
 source "kernel/gcov/Kconfig"
+source "kernel/pgo/Kconfig"
