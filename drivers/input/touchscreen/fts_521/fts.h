@@ -284,6 +284,13 @@ struct fts_ts_info {
 	struct dentry *debugfs;
 #endif
 	bool lockdown_is_ok;
+	struct proc_dir_entry *input_proc;
+	struct completion tp_reset_completion;
+	atomic_t system_is_resetting;
+	unsigned int fod_status;
+	bool irq_status;
+	bool dev_pm_suspend;
+	struct completion dev_pm_suspend_completion;
 };
 
 struct fts_mode_switch {
