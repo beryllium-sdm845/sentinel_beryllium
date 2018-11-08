@@ -65,7 +65,6 @@
 
 
 		qcom,idle-timeout = <64>; //msecs
-		qcom,no-nap;
 
 
 		qcom,highest-bank-bit = <15>;
