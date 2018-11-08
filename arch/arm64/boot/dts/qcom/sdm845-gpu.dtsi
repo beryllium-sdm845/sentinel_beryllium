@@ -63,8 +63,12 @@
 		qcom,gpu-quirk-hfi-use-reg;
 		qcom,gpu-quirk-secvid-set-once;
 
+<<<<<<< HEAD
 		qcom,idle-timeout = <80>; //msecs
 		qcom,no-nap;
+=======
+		qcom,idle-timeout = <64>; //msecs
+>>>>>>> 401d8eb38c55... sdm845-gpu-dtsi: enable NAP power saving state for Adreno 630 GPU
 
 		qcom,highest-bank-bit = <15>;
 
