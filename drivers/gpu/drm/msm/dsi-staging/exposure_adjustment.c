@@ -19,9 +19,6 @@
 
 #include <linux/device.h>
 #include <linux/platform_device.h>
-
-#include <linux/moduleparam.h>
-
 #include <linux/notifier.h>
 #include "dsi_display.h"
 #include "dsi_panel.h"
@@ -31,21 +28,8 @@
 
 static struct drm_msm_pcc pcc_blk = {0};
 
-#ifndef EA_MODE_ALWAYS_ON
-
 static bool pcc_backlight_enable = false;
-#endif
 static u32 last_level = ELVSS_OFF_THRESHOLD;
-
-
-static __read_mostly unsigned int flickerfree_enabled = 0;
-
-module_param(flickerfree_enabled, uint, 0644);
-
-unsigned int ea_panel_on(void) {
-	return flickerfree_enabled;
-}
-
 
 static int ea_panel_crtc_send_pcc(struct dsi_display *display,
 			       u32 r_data, u32 g_data, u32 b_data)
@@ -128,7 +112,7 @@ static int ea_panel_send_pcc(u32 bl_lvl)
 }
 
 
-#ifndef EA_MODE_ALWAYS_ON
+r
 
 void ea_panel_mode_ctrl(struct dsi_panel *panel, bool enable)
 {
@@ -143,31 +127,21 @@ void ea_panel_mode_ctrl(struct dsi_panel *panel, bool enable)
 		ea_panel_send_pcc(ELVSS_OFF_THRESHOLD);
 	}
 }
-#endif
+
 
 
 u32 ea_panel_calc_backlight(u32 bl_lvl)
 {
-	u32 override_level;
-
-	if (bl_lvl != 0 &&
-#ifndef EA_MODE_ALWAYS_ON
-		pcc_backlight_enable &&
-#endif
-		bl_lvl < ELVSS_OFF_THRESHOLD) {
-		if (ea_panel_send_pcc(bl_lvl))
-			pr_err("ERROR: Failed to send PCC\n");
-
-		override_level = ELVSS_OFF_THRESHOLD;
-	} else {
-		if(last_level < ELVSS_OFF_THRESHOLD)
-			ea_panel_send_pcc(ELVSS_OFF_THRESHOLD);
-
-		override_level = bl_lvl;
-	}
 
 	last_level = bl_lvl;
 
-	return override_level;
+	if (pcc_backlight_enable && bl_lvl != 0 && bl_lvl < ELVSS_OFF_THRESHOLD) {
+		if (ea_panel_send_pcc(bl_lvl))
+			pr_err("ERROR: Failed to send PCC\n");
+
+		return ELVSS_OFF_THRESHOLD;
+	} else {
+		return bl_lvl;
+	}
 
 }
