@@ -1,10 +1,7 @@
 
-/* DTS_EAGLE START */
-
 #include <linux/module.h>   /* Needed by all modules */
 #include <linux/kernel.h>   /* Needed for KERN_INFO */
 #include <linux/init.h>     /* Needed for the macros */
-#include <linux/version.h>
 
 #include <linux/fs.h>
 #include <linux/cdev.h>
@@ -72,21 +69,14 @@ enum {                  /* cache block description */
 	(no_printk(KERN_INFO "DTS_EAGLE_DRIVER: " fmt "\n", ##__VA_ARGS__))
 
 
-/* pr_err */
-#define dts_eagle_drv_err_msg(fmt, ...)  \
-	(printk(KERN_INFO "DTS_EAGLE_DRIVER: " fmt "\n", ##__VA_ARGS__))
-
 
 /* dts eagle driver */
 static dev_t            dts_eagle_dev;
 static struct   cdev    dts_eagle_char_dev;
 static struct   class   *p_dts_eagle_class;
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 37)
-static DECLARE_MUTEX(lock);
-#else
+
 static DEFINE_SEMAPHORE(lock);
-#endif
 
 
 /* dts eagle parameter cache */
@@ -150,7 +140,7 @@ static s32 _get_cb_for_dev(int device, unsigned int rate )
 		}
 	}
 
-	dts_eagle_drv_err_msg("%s: device %i not found", __func__, device);
+	dts_eagle_drv_dbg_msg("%s: device %i not found", __func__, device);
 
 	return -EINVAL;
 }
@@ -180,7 +170,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_to_user((void *)arg, &_depc_size, sizeof(_depc_size))) {
 
-			dts_eagle_drv_err_msg("%s: error writing size", __func__);
+			dts_eagle_drv_dbg_msg("%s: error writing size", __func__);
 
 			up(&lock);
 			return -EFAULT;
@@ -196,14 +186,14 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_from_user((void *)&size, (void *)arg, sizeof(size))) {
 
-			dts_eagle_drv_err_msg("%s: error copying size (src:%p, tgt:%p, size:%zu)",
+			dts_eagle_drv_dbg_msg("%s: error copying size (src:%p, tgt:%p, size:%zu)",
 
 				__func__, (void *)arg, &size, sizeof(size));
 			up(&lock);
 			return -EFAULT;
 		} else if (size < 0 || size > DEPC_MAX_SIZE) {
 
-			dts_eagle_drv_err_msg("%s: cache size %d not allowed (min 0, max %d)",
+			dts_eagle_drv_dbg_msg("%s: cache size %d not allowed (min 0, max %d)",
 
 				 __func__, size, DEPC_MAX_SIZE);
 			up(&lock);
@@ -230,7 +220,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			_depc_size = size;
 		} else {
 
-			dts_eagle_drv_err_msg("%s: error allocating param cache (kzalloc failed on %d bytes)",
+			dts_eagle_drv_dbg_msg("%s: error allocating param cache (kzalloc failed on %d bytes)",
 
 				__func__, size);
 			_depc_size = 0;
@@ -250,7 +240,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_from_user((void *)&depd, (void *)arg, sizeof(depd))) {
 
-			dts_eagle_drv_err_msg("%s: error copying dts_eagle_param_desc (src:%p, tgt:%p, size:%zu)",
+			dts_eagle_drv_dbg_msg("%s: error copying dts_eagle_param_desc (src:%p, tgt:%p, size:%zu)",
 
 				__func__, (void *)arg, &depd, sizeof(depd));
 			up(&lock);
@@ -261,7 +251,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		cb = _get_cb_for_dev(depd.device, depd.rate);
 		if (cb < 0) {
 
-			dts_eagle_drv_err_msg("%s: no cache for device %i found",
+			dts_eagle_drv_dbg_msg("%s: no cache for device %i found",
 
 				 __func__, depd.device);
 			up(&lock);
@@ -271,7 +261,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		offset = _c_bl[cb][CBD_OFFSG] + depd.offset;
 		if ((offset + depd.size) > _depc_size) {
 
-			dts_eagle_drv_err_msg("%s: invalid size %d and/or offset %d",
+			dts_eagle_drv_dbg_msg("%s: invalid size %d and/or offset %d",
 
 				 __func__,
 			     depd.size, offset);
@@ -283,7 +273,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		if (copy_to_user((void *)(((char *)arg) + sizeof(depd)),
 		     buf, depd.size)) {
 
-			dts_eagle_drv_err_msg("%s: error copying get data",
+			dts_eagle_drv_dbg_msg("%s: error copying get data",
 
 				__func__);
 			up(&lock);
@@ -302,7 +292,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_from_user((void *)&depd, (void *)arg, sizeof(depd))) {
 
-			dts_eagle_drv_err_msg("%s: error copying dts_eagle_param_desc (src:%p, tgt:%p, size:%zu)",
+			dts_eagle_drv_dbg_msg("%s: error copying dts_eagle_param_desc (src:%p, tgt:%p, size:%zu)",
 
 				__func__, (void *)arg, &depd, sizeof(depd));
 			up(&lock);
@@ -324,7 +314,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		tgt = _get_cb_for_dev(depd.device, depd.rate);
 		if (tgt < 0) {
 
-			dts_eagle_drv_err_msg("%s: no cache for device %i found",
+			dts_eagle_drv_dbg_msg("%s: no cache for device %i found",
 
 				 __func__, depd.device);
 			up(&lock);
@@ -334,7 +324,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		offset = _c_bl[tgt][CBD_OFFSG] + depd.offset;
 		if ((offset + depd.size) > _depc_size) {
 
-			dts_eagle_drv_err_msg("%s: invalid size %i and/or offset %i for parameter (target cache block %i with offset %i, global cache is size %u)",
+			dts_eagle_drv_dbg_msg("%s: invalid size %i and/or offset %i for parameter (target cache block %i with offset %i, global cache is size %u)",
 
 				 __func__, depd.size, offset, tgt,
 				 _c_bl[tgt][CBD_OFFSG], _depc_size);
@@ -345,7 +335,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		if (copy_from_user((void *)&_depc[offset],
 		     (void *)(((char *)arg)+sizeof(depd)), depd.size)) {
 
-			dts_eagle_drv_err_msg("%s: error copying param to cache (src:%p, tgt:%p, size:%i)",
+			dts_eagle_drv_dbg_msg("%s: error copying param to cache (src:%p, tgt:%p, size:%i)",
 
 				 __func__, ((char *)arg)+sizeof(depd),
 				 &_depc[offset], depd.size);
@@ -368,7 +358,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_from_user((void *)b_, (void *)arg, sizeof(b_))) {
 
-			dts_eagle_drv_err_msg("%s: error copying cache block data (src:%p, tgt:%p, size:%zu)",
+			dts_eagle_drv_dbg_msg("%s: error copying cache block data (src:%p, tgt:%p, size:%zu)",
 
 				 __func__, (void *)arg, b_, sizeof(b_));
 			up(&lock);
@@ -378,7 +368,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		cb = b_[0];
 		if (cb >= CB_COUNT) {
 
-			dts_eagle_drv_err_msg("%s: cache block %u out of range (max %u)",
+			dts_eagle_drv_dbg_msg("%s: cache block %u out of range (max %u)",
 
 				 __func__, cb, CB_COUNT-1);
 			up(&lock);
@@ -398,7 +388,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		    (b[CBD_OFFSG]+b[CBD_OFFS2]+b[CBD_SZ2]) > _depc_size ||
 		    (b[CBD_OFFSG]+b[CBD_OFFS3]+b[CBD_SZ3]) > _depc_size) {
 
-			dts_eagle_drv_err_msg("%s: cache block bounds out of range", __func__);
+			dts_eagle_drv_dbg_msg("%s: cache block bounds out of range", __func__);
 
 			up(&lock);
 			return -EINVAL;
@@ -415,7 +405,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_from_user((void *)data, (void *)arg, sizeof(data))) {
 
-			dts_eagle_drv_err_msg("%s: error copying active device data (src:%p, tgt:%p, size:%zu)",
+			dts_eagle_drv_dbg_msg("%s: error copying active device data (src:%p, tgt:%p, size:%zu)",
 
 				 __func__, (void *)arg, data, sizeof(data));
 			up(&lock);
@@ -445,7 +435,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_from_user((void *)&pre_cb, (void *)arg, sizeof(pre_cb))) {
 
-			dts_eagle_drv_err_msg("%s: error copying dts_eagle_cache_block (src:%p, tgt:%p, size:%zu)",
+			dts_eagle_drv_dbg_msg("%s: error copying dts_eagle_cache_block (src:%p, tgt:%p, size:%zu)",
 
 				__func__, (void *)arg, &pre_cb, sizeof(pre_cb));
 			up(&lock);
@@ -465,7 +455,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		if (_depc_size == 0 || !_depc || offset < 0 || size <= 0 ||
 		     cmd == 0 || (offset + size) > _depc_size) {
 
-			dts_eagle_drv_err_msg("%s: primary device %i cache index %i general error - cache size = %u, cache ptr = %p, offset = %i, size = %i, cmd = %i",
+			dts_eagle_drv_dbg_msg("%s: primary device %i cache index %i general error - cache size = %u, cache ptr = %p, offset = %i, size = %i, cmd = %i",
 
 				__func__, _device_primary, cidx, _depc_size,
 				_depc, offset, size, cmd);
@@ -484,7 +474,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_to_user(pre_cb.data, &_depc[offset], size)) {
 
-			dts_eagle_drv_err_msg("%s: error copying premix data to userspace",
+			dts_eagle_drv_dbg_msg("%s: error copying premix data to userspace",
 
 				 __func__);
 			up(&lock);
@@ -503,7 +493,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_from_user((void *)&post_cb, (void *)arg, sizeof(post_cb))) {
 
-			dts_eagle_drv_err_msg("%s: error copying dts_eagle_cache_block (src:%p, tgt:%p, size:%zu)",
+			dts_eagle_drv_dbg_msg("%s: error copying dts_eagle_cache_block (src:%p, tgt:%p, size:%zu)",
 
 				__func__, (void *)arg, &post_cb, sizeof(post_cb));
 			up(&lock);
@@ -523,7 +513,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 		if (_depc_size == 0 || !_depc || offset < 0 || size <= 0 ||
 		     cmd == 0 || (offset + size) > _depc_size) {
 
-			dts_eagle_drv_err_msg("%s: primary device %i cache index %i general error - cache size = %u, cache ptr = %p, offset = %i, size = %i, cmd = %i",
+			dts_eagle_drv_dbg_msg("%s: primary device %i cache index %i general error - cache size = %u, cache ptr = %p, offset = %i, size = %i, cmd = %i",
 
 				__func__, _device_primary, cidx, _depc_size,
 				_depc, offset, size, cmd);
@@ -542,7 +532,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (copy_to_user(post_cb.data, &_depc[offset], size)) {
 
-			dts_eagle_drv_err_msg("%s: error copying postmix data to userspace",
+			dts_eagle_drv_dbg_msg("%s: error copying postmix data to userspace",
 
 				 __func__);
 			up(&lock);
@@ -553,7 +543,7 @@ static long dts_eagle_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 	default:
 
-		dts_eagle_drv_err_msg("%s: control 0x%X (invalid control)",
+		dts_eagle_drv_dbg_msg("%s: control 0x%X (invalid control)",
 
 			__func__, cmd);
 		up(&lock);
@@ -623,7 +613,7 @@ static long dts_eagle_compat_ioctl(struct file *f, unsigned int cmd,
 
 	default:
 
-		dts_eagle_drv_err_msg("%s: control 0x%X (invalid control)",
+		dts_eagle_drv_dbg_msg("%s: control 0x%X (invalid control)",
 
 		     __func__, cmd);
 		return -EINVAL;
@@ -712,6 +702,4 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Magesh Devaprakash <magesh.devaprakash@dts.com>");
 MODULE_DESCRIPTION("dts eagle drv() char driver");
 
-
-/* DTS_EAGLE END */
 
