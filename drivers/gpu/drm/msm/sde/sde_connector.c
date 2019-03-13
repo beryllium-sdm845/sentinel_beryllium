@@ -104,6 +104,14 @@ static int sde_backlight_device_update_status(struct backlight_device *bd)
 		return 0;
 	}
 
+
+#ifdef CONFIG_EXPOSURE_ADJUSTMENT
+
+	bl_lvl = ea_panel_calc_backlight(bl_lvl);
+
+#endif
+
+
 	if (c_conn->ops.set_backlight) {
 		event.type = DRM_EVENT_SYS_BACKLIGHT;
 		event.length = sizeof(u32);
