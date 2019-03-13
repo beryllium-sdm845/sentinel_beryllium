@@ -107,9 +107,8 @@ static int sde_backlight_device_update_status(struct backlight_device *bd)
 
 #ifdef CONFIG_EXPOSURE_ADJUSTMENT
 
-	if (ea_panel_on()) {
-		bl_lvl = ea_panel_calc_backlight(bl_lvl);
-	}
+	bl_lvl = ea_panel_calc_backlight(bl_lvl);
+
 
 #endif
 
