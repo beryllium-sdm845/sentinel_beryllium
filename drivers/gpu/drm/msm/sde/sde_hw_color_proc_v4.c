@@ -13,6 +13,32 @@
 #include "sde_hw_color_proc_common_v4.h"
 #include "sde_hw_color_proc_v4.h"
 
+
+#ifdef CONFIG_KLAPSE
+#include <linux/klapse.h>
+
+unsigned short kcal_red = 231;
+unsigned short kcal_green = 231;
+unsigned short kcal_blue = 231;
+#else
+static unsigned short kcal_red = 231;
+static unsigned short kcal_green = 231;
+static unsigned short kcal_blue = 231;
+#endif
+static unsigned short kcal_hue = 0;
+static unsigned short kcal_sat = 255;
+static unsigned short kcal_val = 255;
+static unsigned short kcal_cont = 255;
+
+module_param(kcal_red, short, 0644);
+module_param(kcal_green, short, 0644);
+module_param(kcal_blue, short, 0644);
+module_param(kcal_hue, short, 0644);
+module_param(kcal_sat, short, 0644);
+module_param(kcal_val, short, 0644);
+module_param(kcal_cont, short, 0644);
+
+
 static int sde_write_3d_gamut(struct sde_hw_blk_reg_map *hw,
 		struct drm_msm_3d_gamut *payload, u32 base,
 		u32 *opcode)
@@ -229,9 +255,19 @@ void sde_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg)
 		}
 
 		SDE_REG_WRITE(&ctx->hw, base + PCC_C_OFF, coeffs->c);
-		SDE_REG_WRITE(&ctx->hw, base + PCC_R_OFF, coeffs->r);
-		SDE_REG_WRITE(&ctx->hw, base + PCC_G_OFF, coeffs->g);
-		SDE_REG_WRITE(&ctx->hw, base + PCC_B_OFF, coeffs->b);
+
+
+		// RED
+		SDE_REG_WRITE(&ctx->hw, base + PCC_R_OFF,
+			i == 0 ? (coeffs->r * kcal_red) / 231 : coeffs->r);
+		// GREEN
+		SDE_REG_WRITE(&ctx->hw, base + PCC_G_OFF,
+			i == 1 ? (coeffs->g * kcal_green) / 231 : coeffs->g);
+		// BLUE
+		SDE_REG_WRITE(&ctx->hw, base + PCC_B_OFF,
+			i == 2 ? (coeffs->b * kcal_blue) / 231 : coeffs->b);
+
+
 		SDE_REG_WRITE(&ctx->hw, base + PCC_RG_OFF, coeffs->rg);
 		SDE_REG_WRITE(&ctx->hw, base + PCC_RB_OFF, coeffs->rb);
 		SDE_REG_WRITE(&ctx->hw, base + PCC_GB_OFF, coeffs->gb);
