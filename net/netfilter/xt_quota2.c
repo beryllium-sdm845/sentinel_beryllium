@@ -300,7 +300,7 @@ quota_mt2(const struct sk_buff *skb, struct xt_action_param *par)
 			if (!no_change)
 				e->quota -= charge;
 			ret = !ret;
-		} else if (e->quota) {
+		} else {
 			/* We are transitioning, log that fact. */
 			quota2_log(par->in, par->out, e, q->name);
 			/* we do not allow even small packets from now on */
