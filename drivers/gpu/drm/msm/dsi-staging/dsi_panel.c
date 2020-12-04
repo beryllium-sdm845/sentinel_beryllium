@@ -32,13 +32,12 @@
 #include <drm/drm_notifier.h>
 #include <soc/qcom/socinfo.h>
 
-<<<<<<< HEAD
-=======
+
 #ifdef CONFIG_KLAPSE
 #include <linux/klapse.h>
 #endif
 
->>>>>>> 154023212e71... drm/msm: klapse: v5.0
+
 /**
  * topology is currently defined by a set of following 3 values:
  * 1. num of layer mixers

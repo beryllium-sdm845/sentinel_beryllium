@@ -14,8 +14,7 @@
 #include "sde_hw_color_proc_common_v4.h"
 #include "sde_hw_color_proc_v4.h"
 
-<<<<<<< HEAD
-=======
+
 #ifdef CONFIG_KLAPSE
 #include <linux/klapse.h>
 
@@ -40,7 +39,7 @@ module_param(kcal_sat, short, 0644);
 module_param(kcal_val, short, 0644);
 module_param(kcal_cont, short, 0644);
 
->>>>>>> 154023212e71... drm/msm: klapse: v5.0
+
 static int sde_write_3d_gamut(struct sde_hw_blk_reg_map *hw,
 		struct drm_msm_3d_gamut *payload, u32 base,
 		u32 *opcode)
@@ -264,10 +263,6 @@ void sde_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg)
 		}
 
 		SDE_REG_WRITE(&ctx->hw, base + PCC_C_OFF, coeffs->c);
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> ce4503a691df... drm: msm: kcal: Add RGB bias
 // ====
 // RED
 #if 1
@@ -294,8 +289,7 @@ void sde_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg)
 #endif
 		SDE_REG_WRITE(&ctx->hw, base + PCC_B_OFF, coeffs->b);
 // =====
-<<<<<<< HEAD
-=======
+
 
 		// RED
 		SDE_REG_WRITE(&ctx->hw, base + PCC_R_OFF,
@@ -307,9 +301,6 @@ void sde_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg)
 		SDE_REG_WRITE(&ctx->hw, base + PCC_B_OFF,
 			i == 2 ? (coeffs->b * kcal_blue) / 231 : coeffs->b);
 
->>>>>>> 154023212e71... drm/msm: klapse: v5.0
-=======
->>>>>>> ce4503a691df... drm: msm: kcal: Add RGB bias
 		SDE_REG_WRITE(&ctx->hw, base + PCC_RG_OFF, coeffs->rg);
 		SDE_REG_WRITE(&ctx->hw, base + PCC_RB_OFF, coeffs->rb);
 		SDE_REG_WRITE(&ctx->hw, base + PCC_GB_OFF, coeffs->gb);
