@@ -10175,16 +10175,7 @@ done:
 }
 
 #ifdef CONFIG_SOUND_CONTROL
-<<<<<<< HEAD
-<<<<<<< HEAD
-static struct snd_soc_codec *sound_control_codec_ptr;
-=======
->>>>>>> 220e84ac7031... wcd934x: sound control: reset headphone digital gain to user value
-static int speaker_gain_val = 6;
-int sound_control_speaker_gain(int gain);
 
-=======
->>>>>>> d0f247e516cd... techpack: sound_control: remove the speaker bits
 static ssize_t headphone_gain_show(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
