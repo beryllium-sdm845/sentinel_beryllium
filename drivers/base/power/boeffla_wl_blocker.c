@@ -44,13 +44,9 @@
 #include <linux/device.h>
 #include <linux/miscdevice.h>
 #include <linux/printk.h>
-<<<<<<< HEAD
 
-
-#define BOEFFLA_WL_BLOCKER_VERSION	"1.0.0"
-=======
 #include "boeffla_wl_blocker.h"
->>>>>>> 4bc2b1cf6b9d... boeffla_wl_blocker: update to wakelock blocker driver v1.1.0
+
 
 
 /*****************************************/
