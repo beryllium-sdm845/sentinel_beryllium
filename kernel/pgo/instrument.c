@@ -131,3 +131,52 @@ void __llvm_profile_instrument_range(u64 target_value, void *data,
 	__llvm_profile_instrument_target(target_value, data, index);
 }
 EXPORT_SYMBOL(__llvm_profile_instrument_range);
+
+int InstProfPopcountll(unsigned long long X) {
+  // This code originates from https://reviews.llvm.org/rG30626254510f.
+  unsigned long long v = X;
+  v = v - ((v >> 1) & 0x5555555555555555ULL);
+  v = (v & 0x3333333333333333ULL) + ((v >> 2) & 0x3333333333333333ULL);
+  v = (v + (v >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
+  return (int)((unsigned long long)(v * 0x0101010101010101ULL) >> 56);
+}
+
+int InstProfClzll(unsigned long long X) {
+  unsigned long LeadZeroIdx = 0;
+
+#if !defined(_M_ARM64) && !defined(_M_X64)
+  // Scan the high 32 bits.
+  if (_BitScanReverse(&LeadZeroIdx, (unsigned long)(X >> 32)))
+    return (int)(63 - (LeadZeroIdx + 32)); // Create a bit offset
+                                                      // from the MSB.
+  // Scan the low 32 bits.
+  if (_BitScanReverse(&LeadZeroIdx, (unsigned long)(X)))
+    return (int)(63 - LeadZeroIdx);
+#else
+  if (_BitScanReverse64(&LeadZeroIdx, X)) return 63 - LeadZeroIdx;
+#endif
+  return 64;
+}
+
+uint64_t InstrProfGetRangeRepValue(uint64_t Value) {
+  if (Value <= 8)
+    // The first ranges are individually tracked. Use the value as is.
+    return Value;
+  else if (Value >= 513)
+    // The last range is mapped to its lowest value.
+    return 513;
+  else if (InstProfPopcountll(Value) == 1)
+    // If it's a power of two, use it as is.
+    return Value;
+  else
+    // Otherwise, take to the previous power of two + 1.
+    return (1 << (64 - InstProfClzll(Value) - 1)) + 1;
+}
+
+void __llvm_profile_instrument_memop(uint64_t TargetValue, void *Data,
+                                uint32_t CounterIndex) {
+  // Map the target value to the representative value of its range.
+  uint64_t RepValue = InstrProfGetRangeRepValue(TargetValue);
+  __llvm_profile_instrument_target(RepValue, Data, CounterIndex);
+}
+EXPORT_SYMBOL(__llvm_profile_instrument_memop);

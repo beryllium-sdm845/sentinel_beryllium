@@ -142,4 +142,8 @@ __DEFINE_PRF_SIZE(cnts);
 __DEFINE_PRF_SIZE(names);
 __DEFINE_PRF_SIZE(vnds);
 
+#ifndef _BitScanReverse
+unsigned char _BitScanReverse(unsigned long *index, unsigned long mask);
+#define _BitScanReverse
+#endif
 #endif /* _PGO_H */
