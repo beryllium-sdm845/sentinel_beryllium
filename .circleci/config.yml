@@ -4,7 +4,9 @@ jobs:
    docker:
       - image: starlight2834/ci_docker:latest
    steps:
+
       - run: apt-get -y update && apt-get -y upgrade && apt-get -y install git
+
       - checkout
       - run: bash kernel_setup.sh
 workflows:

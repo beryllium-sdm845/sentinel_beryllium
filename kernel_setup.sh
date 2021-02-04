@@ -8,16 +8,20 @@
 
 # Config
 CURRENT_DIR="$(pwd)"
+
 KERNELNAME="Notorious"
 KERNEL_DIR="$CURRENT_DIR"
 AK_REPO="https://github.com/sajidshahriar72543/AnyKernel3"
 AK_DIR="$HOME/AnyKernel3"
 TC_DIR="$HOME/proton-clang"
+
 # End Config
 
 # clone_tc - clones proton clang to TC_DIR
 clone_tc() {
+
 	git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $TC_DIR
+
 }
 
 # Clones anykernel

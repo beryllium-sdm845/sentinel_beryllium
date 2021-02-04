@@ -1,6 +1,6 @@
 VERSION = 4
 PATCHLEVEL = 9
-SUBLEVEL = 254
+SUBLEVEL = 255
 EXTRAVERSION =
 NAME = Roaring Lionus
 
@@ -732,6 +732,11 @@ ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS   += -Os
 else
 KBUILD_CFLAGS   += -O2
+endif
+
+# Wno-psabi to aviod useless, irritating warnings
+ifeq ($(cc-name),gcc)
+KBUILD_CFLAGS	+= -Wno-psabi
 endif
 
 ifdef CONFIG_CC_WERROR

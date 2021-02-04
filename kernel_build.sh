@@ -20,7 +20,9 @@ export ARCH SUBARCH
 
 KERNEL_IMG=$KERNEL_DIR/out/arch/$ARCH/boot/Image.gz-dtb
 
+
 TG_CHAT_ID="903746992"
+
 TG_BOT_TOKEN="$BOT_API_KEY"
 # End config
 
@@ -66,6 +68,7 @@ build_config() {
 # only use after runing build_setup()
 build_kernel() {
 
+
     make O=out $DEFCONFIG -j$(nproc --all)
     BUILD_START=$(date +"%s")
 	echo $TC_DIR
@@ -80,6 +83,7 @@ build_kernel() {
                 OBJCOPY=llvm-objcopy \
                 OBJDUMP=llvm-objdump \
                 STRIP=llvm-strip |& tee $LOG
+
 
     BUILD_END=$(date +"%s")
     DIFF=$((BUILD_END - BUILD_START))
@@ -125,6 +129,7 @@ tg_sendinfo "-- Build Triggered --
 $CAPTION"
 
 # Build device 1
+
 build_setup $DEFCONFIG
 build_kernel
 build_end $DEVICE
@@ -136,5 +141,6 @@ build_end $DEVICE2
 
 # Build device 1
 build_setup $DEFCONFIG3
+
 build_kernel
 build_end $DEVICE3
