@@ -1,4 +1,4 @@
-CONFIG_LOCALVERSION="~Notorious-Beryllium_1.3-rc3"
+CONFIG_LOCALVERSION="~Notorious-Beryllium_1.4"
 # CONFIG_FHANDLE is not set
 CONFIG_AUDIT=y
 # CONFIG_AUDITSYSCALL is not set
