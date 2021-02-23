@@ -8,7 +8,7 @@
 
 # Config
 CURRENT_DIR="$(pwd)"
-KERNELNAME="Notorious"
+KERNELNAME="Sentinel"
 KERNEL_DIR="$CURRENT_DIR"
 AK_REPO="https://github.com/sajidshahriar72543/AnyKernel3"
 AK_DIR="$HOME/AnyKernel3"
