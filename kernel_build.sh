@@ -138,3 +138,12 @@ build_end $DEVICE2
 build_setup $DEFCONFIG3
 build_kernel
 build_end $DEVICE3
+
+# Build old touch fw version for device 1
+# Build device 1
+build_setup
+git apply old_touch_fw.patch
+build_config $DEFCONFIG
+build_kernel
+build_end ${DEVICE}_old_touch_fw
+
