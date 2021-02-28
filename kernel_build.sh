@@ -6,11 +6,11 @@
 
 # Config
 DEVICE="beryllium"
-DEVICE2="polaris"
-DEVICE3="dipper"
+#DEVICE2="polaris"
+#DEVICE3="dipper"
 DEFCONFIG="${DEVICE}_defconfig"
-DEFCONFIG2="${DEVICE2}_defconfig"
-DEFCONFIG3="${DEVICE3}_defconfig"
+#DEFCONFIG2="${DEVICE2}_defconfig"
+#DEFCONFIG3="${DEVICE3}_defconfig"
 LOG="$HOME/log.txt"
 
 # Export arch and subarch
@@ -129,15 +129,15 @@ build_setup $DEFCONFIG
 build_kernel
 build_end $DEVICE
 
-# Build device 1
-build_setup $DEFCONFIG2
-build_kernel
-build_end $DEVICE2
+# Build device 2
+#build_setup $DEFCONFIG2
+#build_kernel
+#build_end $DEVICE2
 
 # Build device 1
-build_setup $DEFCONFIG3
-build_kernel
-build_end $DEVICE3
+#build_setup $DEFCONFIG3
+#build_kernel
+#build_end $DEVICE3
 
 # Build old touch fw version for device 1
 # Build device 1
