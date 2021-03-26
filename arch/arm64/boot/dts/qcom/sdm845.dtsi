@@ -482,7 +482,9 @@
 
 	chosen {
 
-		bootargs = "quiet rcupdate.rcu_expedited=1 noirqdebug cgroup.memory=nokmem,nosocket";
+
+		bootargs = "rcupdate.rcu_expedited=1 noirqdebug";
+
 
 	};
 
