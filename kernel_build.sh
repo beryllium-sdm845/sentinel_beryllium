@@ -20,7 +20,7 @@ export ARCH SUBARCH
 
 KERNEL_IMG=$KERNEL_DIR/out/arch/$ARCH/boot/Image.gz-dtb
 
-TG_CHAT_ID="903746992"
+TG_CHAT_ID="-1001248289298"
 TG_BOT_TOKEN="$BOT_API_KEY"
 # End config
 
