@@ -1003,7 +1003,6 @@ static int mhi_uci_client_open(struct inode *mhi_inode,
 	file_handle->private_data = uci_handle;
 
 	return 0;
-
 }
 
 static int mhi_uci_client_release(struct inode *mhi_inode,
@@ -1040,10 +1039,13 @@ static int mhi_uci_client_release(struct inode *mhi_inode,
 			wake_up(&uci_handle->write_wq);
 			mutex_unlock(&uci_handle->out_chan_lock);
 
-			mutex_lock(&uci_handle->in_chan_lock);
-			mhi_dev_close_channel(uci_handle->in_handle);
-			wake_up(&uci_handle->read_wq);
-			mutex_unlock(&uci_handle->in_chan_lock);
+	do {
+		if (mhi_dev_channel_has_pending_write(uci_handle->out_handle))
+			usleep_range(MHI_UCI_RELEASE_TIMEOUT_MIN,
+				MHI_UCI_RELEASE_TIMEOUT_MAX);
+		else
+			break;
+	} while (++count < MHI_UCI_RELEASE_TIMEOUT_COUNT);
 
 	if (count == MHI_UCI_RELEASE_TIMEOUT_COUNT) {
 		uci_log(UCI_DBG_DBG, "Channel %d has pending writes\n",
